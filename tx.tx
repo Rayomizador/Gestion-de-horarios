@@ -1,0 +1,12 @@
+/COMANDOS NODE- 
+
+
+node -v: Verificar versión de Node.js.
+
+npm -v: Verificar versión de npm.
+
+npm init: Inicializar un nuevo proyecto Node.js.
+
+npm install express --save: Instalar Express (opcional).
+
+npm install mongoose --save: Instalar Mongoose en el proyecto.

@@ -1,0 +1,39 @@
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2>{{title}}</h2>
+        <hr>
+
+        <form action="/users/register" method="POST">
+            {{#if errorMessage}}
+                <div class="alert alert-danger" role="alert">
+                    {{errorMessage}}
+                </div>
+            {{/if}}
+
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre Completo</label>
+                <input type="text" class="form-control" id="nombre" name="nombre">
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email">
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" name="password">
+            </div>
+
+            <div class="mb-3">
+                <label for="role" class="form-label">Rol del Empleado</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="Employee" selected>Empleado (Employee)</option>
+                    <option value="Admin">Administrador (Admin)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Registrar Empleado</button>
+        </form>
+    </div>
+</div>
