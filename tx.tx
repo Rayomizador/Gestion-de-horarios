@@ -10,3 +10,11 @@ npm init: Inicializar un nuevo proyecto Node.js.
 npm install express --save: Instalar Express (opcional).
 
 npm install mongoose --save: Instalar Mongoose en el proyecto.
+
+
+Comando,Para qué sirve
+git status,1. Ver qué he modificado.
+git pull,2. (Opcional) Traer cambios de otros (siempre es buena idea).
+git add .,3. Preparar mis cambios para guardarlos.
+"git commit -m ""...""",4. Guardar mis cambios en mi máquina (local).
+git push,5. Subir mis cambios guardados a GitHub (remoto).
