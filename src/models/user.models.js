@@ -29,11 +29,14 @@ const userSchema = new mongoose.Schema({
         type: [String], 
         default: []    
     },
-    
-    
-    role:{
+  horario: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Horario' 
+    },
+     role:{
         type: String,
         default: 'user' //Role por defecto 'user'
+        
     },
 });
 

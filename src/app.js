@@ -71,7 +71,7 @@ app.get('/profile',
         try {
             
             const user = await UserModel.findById(req.user.id)
-                                        .populate('horario')
+                                        .populate('Horario')
                                         .lean();
 
             if (!user) {

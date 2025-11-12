@@ -31,7 +31,25 @@
                 <label class="form-label">Martes (horas)</label>
                 <input type="number" class="form-control" name="horas_martes" value="{{user.horario.horas_martes}}">
             </div>
-            {{! ... Repetir para Miercoles, Jueves, Viernes, Sabado, Domingo ... }}
+            <div class="mb-3">
+                <label class="form-label    ">Miércoles (horas)</label>
+                <input type="number" class="form-control" name="horas_miercoles" value="{{user.horario.horas_miercoles}}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label    ">Jueves (horas)</label>
+                <input type="number" class="form-control" name="horas_jueves" value="{{user.horario.horas_jueves}}">
+            </div> 
+            <div class="mb-3">
+                <label class="form-label        ">Viernes (horas)</label>   
+                <input type="number" class="form-control" name="horas_viernes" value="{{user.horario.horas_viernes}}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label        ">Sábado (horas)</label>
+                <input type="number" class="form-control" name="horas_sabado" value="{{user.horario.horas_sabado}}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Domingo (horas)</label>
+                <input type="number" class="form-control" name="horas_domingo" value="{{user.horario.horas_domingo}}">
 
             <button type="submit" class="btn btn-success">Guardar Horario</button>
         </form>
