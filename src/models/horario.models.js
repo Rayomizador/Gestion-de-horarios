@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-// Este es el sub-esquema para el array de "tiempo extra"
+
 const tiempoExtraSchema = new Schema({
     horas: {
         type: Number,
