@@ -3,16 +3,24 @@
         <h2>{{title}}</h2>
         <hr>
 
-        <form action="/users/register" method="POST">
-            {{#if errorMessage}}
-                <div class="alert alert-danger" role="alert">
-                    {{errorMessage}}
-                </div>
-            {{/if}}
+        <form id="registerForm">
+            
+            <div id="errorMessage" class="alert alert-danger" role="alert" style="display: none;">
+            </div>
 
             <div class="mb-3">
-                <label for="nombre" class="form-label">Nombre Completo</label>
-                <input type="text" class="form-control" id="nombre" name="nombre">
+                <label for="first_name" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="first_name" name="first_name">
+            </div>
+
+            <div class="mb-3">
+                <label for="last_name" class="form-label">Apellido</label>
+                <input type="text" class="form-control" id="last_name" name="last_name">
+            </div>
+
+            <div class="mb-3">
+                <label for="age" class="form-label">Edad</label>
+                <input type="number" class="form-control" id="age" name="age">
             </div>
 
             <div class="mb-3">
@@ -25,15 +33,47 @@
                 <input type="password" class="form-control" id="password" name="password">
             </div>
 
-            <div class="mb-3">
-                <label for="role" class="form-label">Rol del Empleado</label>
-                <select class="form-select" id="role" name="role">
-                    <option value="Employee" selected>Empleado (Employee)</option>
-                    <option value="Admin">Administrador (Admin)</option>
-                </select>
-            </div>
 
-            <button type="submit" class="btn btn-primary">Registrar Empleado</button>
+            <button type="submit" class="btn btn-primary">Registrar</button>
         </form>
     </div>
 </div>
+
+<script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData(form);
+        
+        const data = Object.fromEntries(formData.entries());
+        
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.style.display = 'none'; 
+
+        try {
+            const response = await fetch('/api/sessions/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('¡Registro exitoso! Serás redirigido para iniciar sesión.');
+                window.location.href = '/login'; 
+            } else {
+                
+                errorDiv.textContent = result.message || 'Error al registrar.';
+                errorDiv.style.display = 'block';
+            }
+        } catch (err) {
+            console.error('Error de fetch:', err);
+            errorDiv.textContent = 'No se pudo conectar con el servidor.';
+            errorDiv.style.display = 'block';
+        }
+    });
+</script>

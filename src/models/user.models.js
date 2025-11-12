@@ -2,7 +2,11 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema({
-    nombre: {
+    first_name: {
+        type: String,
+        required: true
+    },
+    last_name: {
         type: String,
         required: true
     },
@@ -11,28 +15,45 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    age: {
+        type: Number,
+        required: true
+    },
     password: {
         type: String,
         required: true,
     },
+    
+    // CAMBIE CART POR ESTE, SE AÑADEN DIAS DE DESCANSO, SIMULANDO EL CARRITO. 
+    dias_descanso: {
+        type: [String], 
+        default: []    
+    },
+    
+    
     role:{
         type: String,
-        enum: ['Employee', 'Admin'],
-        default: 'Employee'
+        default: 'user' //Role por defecto 'user'
     },
-})
+});
 
 
-userSchema.pre('save', async function (next) {
-    if(!this.isModified('password')) return next(); 
+userSchema.pre('save', function (next) {
+    // Solo hashear si la contraseña es nueva o fue modificada
+    if (!this.isModified('password')) return next(); 
+    
     try {
-        const salt = await bcrypt.genSalt(10);
-        this.password =  await bcrypt.hash(this.password, salt);
+        const salt = bcrypt.genSaltSync(10);
+        this.password = bcrypt.hashSync(this.password, salt);
         next();
-    }catch (error) {
+    } catch (error) {
         next(error);
     }      
-
 });
+
+userSchema.methods.comparePassword = async function(candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
+};
+
 
 export const UserModel = mongoose.model('User', userSchema);

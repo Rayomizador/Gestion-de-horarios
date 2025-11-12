@@ -1,0 +1,74 @@
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2>{{title}}</h2>
+        <hr>
+
+        <form id="loginForm">
+            
+            <div id="errorMessage" class="alert alert-danger" role="alert" style="display: none;">
+                
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email">
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Contraseña</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="password" name="password">
+                    
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">Mostrar</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    const toggleButton = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+
+    toggleButton.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        
+        passwordInput.setAttribute('type', type);
+        
+        toggleButton.textContent = type === 'password' ? 'Mostrar' : 'Ocultar';
+    });
+</script>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/sessions/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert('¡Login exitoso! Bienvenido.');
+                window.location.href = '/profile'; 
+            } else {
+                errorDiv.textContent = result.message || 'Error al iniciar sesión.';
+                errorDiv.style.display = 'block';
+            }
+        } catch (err) {
+            console.error('Error de fetch:', err);
+            errorDiv.textContent = 'No se pudo conectar con el servidor.';
+            errorDiv.style.display = 'block';
+        }
+    });
+</script>

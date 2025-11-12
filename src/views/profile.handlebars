@@ -1,0 +1,77 @@
+<div class="row">
+    <div class="col-md-6">
+        <h2>Perfil de {{user.first_name}} {{user.last_name}}</h2>
+        <hr>
+        <p><strong>Email:</strong> {{user.email}}</p>
+        <p><strong>Rol:</strong> {{user.role}}</p>
+
+        <h4>Días de Descanso Fijos:</h4>
+        <ul>
+            {{#each user.dias_descanso}}
+                <li>{{this}}</li>
+            {{else}}
+                <li>No tienes días de descanso fijos asignados.</li>
+            {{/each}}
+        </ul>
+    </div>
+
+    <div class="col-md-6">
+        <h4>Mi Horario Semanal</h4>
+        <hr>
+        {{! Div para mensajes de éxito/error }}
+        <div id="formMessage" class="alert" style="display: none;"></div>
+
+        <form id="horarioForm">
+            {{! Usamos 'horario.horas_lunes' porque 'user.horario' es el objeto poblado }}
+            <div class="mb-3">
+                <label class="form-label">Lunes (horas)</label>
+                <input type="number" class="form-control" name="horas_lunes" value="{{user.horario.horas_lunes}}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Martes (horas)</label>
+                <input type="number" class="form-control" name="horas_martes" value="{{user.horario.horas_martes}}">
+            </div>
+            {{! ... Repetir para Miercoles, Jueves, Viernes, Sabado, Domingo ... }}
+
+            <button type="submit" class="btn btn-success">Guardar Horario</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('horarioForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        const msgDiv = document.getElementById('formMessage');
+
+        try {
+            // Esta es la API que crearemos en el Paso 4
+            const response = await fetch('/api/horarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                    // La cookie JWT se envía automáticamente
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                msgDiv.textContent = '¡Horario guardado!';
+                msgDiv.className = 'alert alert-success';
+            } else {
+                msgDiv.textContent = result.message || 'Error al guardar.';
+                msgDiv.className = 'alert alert-danger';
+            }
+            msgDiv.style.display = 'block';
+
+        } catch (err) {
+            msgDiv.textContent = 'Error de conexión.';
+            msgDiv.className = 'alert alert-danger';
+            msgDiv.style.display = 'block';
+        }
+    });
+</script>

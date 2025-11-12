@@ -1,0 +1,39 @@
+body {
+    background-color: #f4f4f4; 
+}
+
+nav {
+    background-color: #333; 
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-right: 15px;
+    font-weight: bold;
+}
+
+nav a:hover {
+    color: #0d6efd;
+}
+
+
+
+
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-right: 15px;
+    font-weight: bold;
+
+    /* AÑADIR ESTO: */
+    /* La animación durará 0.3 segundos */
+    transition: color 0.7s ease;
+}
+
+nav a:hover {
+    color: #0d6efd;
+}
