@@ -1,0 +1,87 @@
+3<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Crear Nuevo Horario</h4>
+            </div>
+            <div class="card-body">
+                <form id="horarioForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="año" class="form-label">Año</label>
+                            <input type="number" class="form-control" id="año" name="año" 
+                                   value="{{currentYear}}" min="2024" max="2030" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="semana" class="form-label">Semana</label>
+                            <input type="number" class="form-control" id="semana" name="semana" 
+                                   value="{{currentWeek}}" min="1" max="52" required>
+                        </div>
+                    </div>
+
+                    <div id="dias-container">
+                        <h5 class="mt-4 mb-3">Días de la Semana</h5>
+                        
+                        {{#each diasSemana}}
+                        <div class="card mb-3 dia-card">
+                            <div class="card-header">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input dia-activo" type="checkbox" 
+                                           id="dia-{{@index}}" data-dia="{{this.nombre}}">
+                                    <label class="form-check-label fw-bold" for="dia-{{@index}}">
+                                        {{this.nombre}} - {{this.fecha}}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="card-body dia-campos" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="hora_entrada_{{@index}}" class="form-label">Hora de Entrada</label>
+                                        <input type="time" class="form-control hora-entrada" 
+                                               id="hora_entrada_{{@index}}" data-dia="{{this.nombre}}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="hora_salida_{{@index}}" class="form-label">Hora de Salida</label>
+                                        <input type="time" class="form-control hora-salida" 
+                                               id="hora_salida_{{@index}}" data-dia="{{this.nombre}}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="horas_extras_{{@index}}" class="form-label">Horas Extras</label>
+                                        <input type="number" class="form-control horas-extras" 
+                                               id="horas_extras_{{@index}}" data-dia="{{this.nombre}}" 
+                                               min="0" step="0.5" value="0">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="observaciones_{{@index}}" class="form-label">Observaciones</label>
+                                        <input type="text" class="form-control observaciones" 
+                                               id="observaciones_{{@index}}" data-dia="{{this.nombre}}"
+                                               placeholder="Observaciones opcionales">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+
+                    <div id="error-message" class="alert alert-danger d-none"></div>
+                    <div id="success-message" class="alert alert-success d-none"></div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/horarios" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Crear Horario</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/nuevo-horario.js"></script>
+
+<script>
+    // Pasar datos desde Handlebars a JavaScript
+    const currentYear = {{currentYear}};
+    const currentWeek = {{currentWeek}};
+</script>

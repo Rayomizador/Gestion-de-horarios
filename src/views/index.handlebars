@@ -1,2 +1,22 @@
-<h1>Bienvenido al {{title}}</h1>
-<p>La aplicación está funcionando.</p>
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <h1 class="display-4 mb-4">Bienvenido al Gestor de Horarios</h1>
+        <p class="lead mb-4">Gestiona tus horarios de trabajo de manera eficiente y organizada.</p>
+        
+        {{#if user}}
+            <div class="card">
+                <div class="card-body">
+                    <h5>¡Hola, {{user.first_name}}!</h5>
+                    <p>Estás logueado correctamente.</p>
+                    <a href="/profile" class="btn btn-primary">Ir a Mi Perfil</a>
+                    <a href="/horarios" class="btn btn-outline-primary">Ver Mis Horarios</a>
+                </div>
+            </div>
+        {{else}}
+            <div class="d-grid gap-2 d-md-block">
+                <a href="/login" class="btn btn-primary btn-lg me-md-2">Iniciar Sesión</a>
+                <a href="/register" class="btn btn-outline-primary btn-lg">Registrarse</a>
+            </div>
+        {{/if}}
+    </div>
+</div>

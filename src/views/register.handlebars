@@ -1,79 +1,42 @@
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <h2>{{title}}</h2>
-        <hr>
-
-        <form id="registerForm">
-            
-            <div id="errorMessage" class="alert alert-danger" role="alert" style="display: none;">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Registrar Nuevo Usuario</h4>
             </div>
-
-            <div class="mb-3">
-                <label for="first_name" class="form-label">Nombre</label>
-                <input type="text" class="form-control" id="first_name" name="first_name">
+            <div class="card-body">
+                <form id="registerForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Apellido</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="age" class="form-label">Edad</label>
+                        <input type="number" class="form-control" id="age" name="age" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div id="error-message" class="alert alert-danger d-none"></div>
+                    <button type="submit" class="btn btn-primary w-100" id="submitBtn">Registrarse</button>
+                </form>
+                <div class="text-center mt-3">
+                    <p>¿Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a></p>
+                </div>
             </div>
-
-            <div class="mb-3">
-                <label for="last_name" class="form-label">Apellido</label>
-                <input type="text" class="form-control" id="last_name" name="last_name">
-            </div>
-
-            <div class="mb-3">
-                <label for="age" class="form-label">Edad</label>
-                <input type="number" class="form-control" id="age" name="age">
-            </div>
-
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email">
-            </div>
-
-            <div class="mb-3">
-                <label for="password" class="form-label">Contraseña</label>
-                <input type="password" class="form-control" id="password" name="password">
-            </div>
-
-
-            <button type="submit" class="btn btn-primary">Registrar</button>
-        </form>
+        </div>
     </div>
 </div>
 
-<script>
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const form = e.target;
-        const formData = new FormData(form);
-        
-        const data = Object.fromEntries(formData.entries());
-        
-        const errorDiv = document.getElementById('errorMessage');
-        errorDiv.style.display = 'none'; 
-
-        try {
-            const response = await fetch('/api/sessions/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert('¡Registro exitoso! Serás redirigido para iniciar sesión.');
-                window.location.href = '/login'; 
-            } else {
-                
-                errorDiv.textContent = result.message || 'Error al registrar.';
-                errorDiv.style.display = 'block';
-            }
-        } catch (err) {
-            console.error('Error de fetch:', err);
-            errorDiv.textContent = 'No se pudo conectar con el servidor.';
-            errorDiv.style.display = 'block';
-        }
-    });
-</script>
+<script src="/js/register.js"></script>

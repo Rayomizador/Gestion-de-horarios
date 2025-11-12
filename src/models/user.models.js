@@ -1,62 +1,92 @@
-import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
 const userSchema = new mongoose.Schema({
     first_name: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     last_name: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        lowercase: true,
+        trim: true
     },
     age: {
         type: Number,
-        required: true
+        required: true,
+        min: 0
     },
     password: {
         type: String,
-        required: true,
+        required: true
     },
-    
-    // CAMBIE CART POR ESTE, SE AÑADEN DIAS DE DESCANSO, SIMULANDO EL CARRITO. 
-    dias_descanso: {
-        type: [String], 
-        default: []    
-    },
-  horario: {
+    // Reemplazamos 'cart' por 'horario' y 'dias_descanso'
+    horario: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Horario' 
+        ref: 'Horario'
     },
-     role:{
+    dias_descanso: [{
         type: String,
-        default: 'user' //Role por defecto 'user'
-        
+        enum: ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+    }],
+    role: {
+        type: String,
+        enum: ['user', 'admin', 'supervisor'],
+        default: 'user'
     },
+    configuracion_horaria: {
+        horas_semanales: {
+            type: Number,
+            default: 40
+        },
+        turno: {
+            type: String,
+            enum: ['mañana', 'tarde', 'noche', 'mixto'],
+            default: 'mañana'
+        },
+        fecha_contratacion: {
+            type: Date,
+            default: Date.now
+        }
+    }
+}, {
+    timestamps: true
 });
 
+// Encriptación de contraseña
+userSchema.pre('save', function(next) {
+    if (!this.isModified('password')) return next();
+    this.password = bcrypt.hashSync(this.password, 10);
+    next();
+});
 
-userSchema.pre('save', function (next) {
-    // Solo hashear si la contraseña es nueva o fue modificada
-    if (!this.isModified('password')) return next(); 
-    
+// Método para comparar contraseñas
+userSchema.methods.comparePassword = function(password) {
     try {
-        const salt = bcrypt.genSaltSync(10);
-        this.password = bcrypt.hashSync(this.password, salt);
-        next();
+        return bcrypt.compareSync(password, this.password);
     } catch (error) {
-        next(error);
-    }      
-});
-
-userSchema.methods.comparePassword = async function(candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
+        console.error('Error comparando contraseñas:', error);
+        return false;
+    }
 };
 
+// Método para obtener nombre completo
+userSchema.methods.getFullName = function() {
+    return `${this.first_name} ${this.last_name}`;
+};
+
+// Método virtual para días laborales
+userSchema.virtual('dias_laborales').get(function() {
+    const todosDias = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    return todosDias.filter(dia => !this.dias_descanso.includes(dia));
+});
 
 export const UserModel = mongoose.model('User', userSchema);

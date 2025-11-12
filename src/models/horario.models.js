@@ -1,73 +1,107 @@
 import mongoose from 'mongoose';
+import { calculateHours } from '../middlewares/calculateHours.middleware.js';
 
-const { Schema } = mongoose;
-
-
-const tiempoExtraSchema = new Schema({
-    horas: {
-        type: Number,
-        required: true
-    },
-    fecha: {
-        type: Date,
-        required: true
-    },
-    descripcion: {
-        type: String,
-        default: '' // Ej: "Horas extra proyecto X" o "Cubriendo turno"
-    }
-}, { _id: true, timestamps: true }); 
-
-
-const horarioSchema = new Schema({
-    user: {
-        type: Schema.Types.ObjectId,
+const horarioSchema = new mongoose.Schema({
+    usuario: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        required: true
+    },
+    semana: {
+        type: Number,
         required: true,
-        unique: true 
+        min: 1,
+        max: 52
     },
-
-   
-    horas_lunes: {
+    año: {
         type: Number,
-        default: 10 
+        required: true
     },
-    horas_martes: {
+    dias: [{
+        fecha: {
+            type: Date,
+            required: true,
+            default: Date.now,
+        },
+        hora_entrada: {
+            type: String,
+            validate: {
+                validator: function(v) {
+                    return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+                },
+                message: 'Formato de hora inválido (HH:MM)'
+            }
+        },
+        hora_salida: {
+            type: String,
+            validate: {
+                validator: function(v) {
+                    return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+                },
+                message: 'Formato de hora inválido (HH:MM)'
+            }
+        },
+        descanso: {
+            type: Boolean,
+            default: false
+        },
+        horas_extras: {
+            type: Number,
+            min: 0,
+            default: 0
+        },
+        observaciones: {
+            type: String,
+            trim: true,
+            maxlength: 200
+        }
+    }],
+    horas_totales: {
         type: Number,
-        default: 10
+        default: 0
     },
-    horas_miercoles: {
+    horas_extras_totales: {
         type: Number,
-        default: 10
+        default: 0
     },
-    horas_jueves: {
-        type: Number,
-        default: 10
-    },
-    horas_viernes: {
-        type: Number,
-        default: 10
-    },
-    horas_sabado: {
-        type: Number,
-        default: 10 
-    },
-    horas_domingo: {
-        type: Number, 
-        default: 10 
-    },
-
-
-    horas_semanales_estandar: {
-        type: Number,
-        default: 50 // (10 * 5 días)
-    },
-
-   
-    tiempo_extra_log: [tiempoExtraSchema]
-
+    estado: {
+        type: String,
+        enum: ['borrador', 'enviado', 'aprobado', 'rechazado'],
+        default: 'borrador'
+    }
 }, {
     timestamps: true
 });
+
+// Middleware pre-save usando el middleware externo
+horarioSchema.pre('save', function(next) {
+    const calculo = calculateHours(this);
+    
+    if (calculo.errores) {
+        const error = new Error(`Errores en el horario: ${calculo.errores.join(', ')}`);
+        return next(error);
+    }
+    
+    this.horas_totales = calculo.horasTotales;
+    this.horas_extras_totales = calculo.horasExtrasTotales;
+    next();
+});
+
+// Método estático para recalcular horas
+horarioSchema.statics.recalcularHoras = function(horarioId) {
+    return this.findById(horarioId).then(horario => {
+        if (!horario) throw new Error('Horario no encontrado');
+        
+        const calculo = calculateHours(horario);
+        return this.findByIdAndUpdate(
+            horarioId, 
+            { 
+                horas_totales: calculo.horasTotales,
+                horas_extras_totales: calculo.horasExtrasTotales
+            },
+            { new: true }
+        );
+    });
+};
 
 export const HorarioModel = mongoose.model('Horario', horarioSchema);

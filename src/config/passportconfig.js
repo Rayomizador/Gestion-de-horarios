@@ -1,73 +1,119 @@
 import passport from 'passport';
-import passportLocal from 'passport-local';
-import passportJwt from 'passport-jwt';
-import bcrypt from 'bcrypt';
-import { UserModel } from '../models/user.models.js'; //
+import { Strategy as LocalStrategy } from 'passport-local';
+import { Strategy as JWTStrategy, ExtractJwt } from 'passport-jwt';
+import { UserModel } from '../models/user.models.js';
 
-const LocalStrategy = passportLocal.Strategy;
-const JwtStrategy = passportJwt.Strategy;
-const ExtractJwt = passportJwt.ExtractJwt;
-
-const JWT_SECRET = process.env.JWT_SECRET; 
-
-if (!JWT_SECRET) {
-    console.error("Error: JWT_SECRET no está definido en el archivo .env");
-    process.exit(1);
-}
-
-// Estrategia Local
-passport.use('local', new LocalStrategy(
-    { usernameField: 'email' },
-    async (email, password, done) => {
+export const initializePassport = () => {
+    // ESTRATEGIA LOCAL
+    passport.use('local', new LocalStrategy({
+        usernameField: 'email',    // Usar email como nombre de usuario
+        passwordField: 'password'  // Campo de contraseña
+    }, async (email, password, done) => {
         try {
-            const user = await UserModel.findOne({ email });
+            console.log('Intentando autenticar:', email);
+            
+            // Buscar usuario por email
+            const user = await UserModel.findOne({ email: email.toLowerCase() });
             
             if (!user) {
-                return done(null, false, { message: 'credenciales invalidas.' });
+                console.log(' Usuario no encontrado:', email);
+                return done(null, false, { message: 'Usuario no encontrado' });
             }
-
-            // Comparar la contraseña hasheada
-            const isMatch = await bcrypt.compare(password, user.password);
             
-            if (!isMatch) {
-                return done(null, false, { message: 'credenciales invalidas' });
+            // Verificar contraseña
+            const isPasswordValid = user.comparePassword(password);
+            if (!isPasswordValid) {
+                console.log(' Contraseña incorrecta para:', email);
+                return done(null, false, { message: 'Contraseña incorrecta' });
             }
-
-            return done(null, user); // Autenticación exitosa
-
+            
+            console.log(' Autenticación exitosa para:', email);
+            return done(null, user);
+            
         } catch (error) {
+            console.error('Error en autenticación local:', error);
             return done(error);
         }
-    }
-));
+    }));
 
-// Función para extraer el token desde una cookie
-const cookieExtractor = (req) => {
-    let token = null;
-    if (req && req.cookies) {
-        token = req.cookies['token'];
-    }
-    return token;
-};
-
-// Estrategia JWT (para proteger rutas y endpoint "current")
-// 
-passport.use('jwt', new JwtStrategy(
-    {
-        jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]), // Extrae de la cookie
-        secretOrKey: JWT_SECRET
-    },
-    async (jwt_payload, done) => {
+    //  ESTRATEGIA JWT - Para autenticación con tokens
+    passport.use('jwt', new JWTStrategy({
+        jwtFromRequest: ExtractJwt.fromExtractors([
+            (req) => {
+                // Buscar token en cookies
+                if (req && req.cookies && req.cookies.jwt) {
+                    return req.cookies.jwt;
+                }
+                // Buscar token en headers
+                if (req && req.headers && req.headers.authorization) {
+                    return req.headers.authorization.replace('Bearer ', '');
+                }
+                return null;
+            }
+        ]),
+        secretOrKey: process.env.JWT_SECRET || 'secreto-gestor-horarios'
+    }, async (payload, done) => {
         try {
-            // El payload son los datos del usuario que firmamos en el token
-            // Passport lo añade a req.user
-            return done(null, jwt_payload);
+            console.log('Validando JWT para usuario ID:', payload.id);
+            const user = await UserModel.findById(payload.id);
+            
+            if (!user) {
+                console.log(' Usuario no encontrado en JWT');
+                return done(null, false);
+            }
+            
+            console.log('JWT válido para:', user.email);
+            return done(null, user);
+        } catch (error) {
+            console.error('Error en validación JWT:', error);
+            return done(error, false);
+        }
+    }));
+
+    //  ESTRATEGIA "current" 
+    passport.use('current', new JWTStrategy({
+        jwtFromRequest: ExtractJwt.fromExtractors([
+            (req) => {
+                if (req && req.cookies && req.cookies.jwt) {
+                    return req.cookies.jwt;
+                }
+                if (req && req.headers && req.headers.authorization) {
+                    return req.headers.authorization.replace('Bearer ', '');
+                }
+                return null;
+            }
+        ]),
+        secretOrKey: process.env.JWT_SECRET || 'secreto-gestor-horarios',
+        ignoreExpiration: true //desarrollo
+    }, async (payload, done) => {
+        try {
+            const user = await UserModel.findById(payload.id);
+            if (!user) return done(null, false);
+            return done(null, user);
         } catch (error) {
             return done(error, false);
         }
-    }
-));
+    }));
 
-export const initializePassport = () => {
-    return passport.initialize();
+    // Serialización del usuario (requerida para sessions)
+    passport.serializeUser((user, done) => {
+        console.log('serializando usuario:', user.email);
+        done(null, user._id);
+    });
+
+    // Deserialización del usuario (requerida para sessions)
+    passport.deserializeUser(async (id, done) => {
+        try {
+            console.log('Deserializando usuario ID:', id);
+            const user = await UserModel.findById(id);
+            done(null, user);
+        } catch (error) {
+            console.error('Error deserializando usuario:', error);
+            done(error, null);
+        }
+    });
+
+    console.log('Todas las estrategias de Passport configuradas correctamente');
 };
+
+export default passport;

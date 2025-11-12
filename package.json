@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node src/app.js",
-     "dev": "nodemon -r dotenv/config src/app.js"
+    "dev": "nodemon -r dotenv/config src/app.js"
   },
   "keywords": [],
   "author": "",

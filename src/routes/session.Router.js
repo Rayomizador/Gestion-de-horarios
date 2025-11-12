@@ -1,81 +1,169 @@
 import { Router } from 'express';
-import { UserModel } from '../models/user.models.js';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
+import { UserModel } from '../models/user.models.js';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'revisa-la-variable-de-entorno-papoi';
 
-// Ruta de Registro
-router.post('/register', async (req, res) => {
-    
-    const { first_name, last_name, email, age, password } = req.body;
-
-    if (!first_name || !last_name || !email || !age || !password) {
-        return res.status(400).send({ status: 'error', message: 'Todos los campos son obligatorios papoi.' });
-    }
-
-    try {
-        const newUser = await UserModel.create({
-            first_name,
-            last_name,
-            email,
-            age,
-            password 
-        });
-
-         res.status(201).send({ status: 'success', message: 'Usuario registrado exitosamente', payload: newUser }); 
-    
-    } catch (error) {
-        if (error.code === 11000) { // Error de índice único (email duplicado)
-            return res.status(400).send({ status: 'error', message: 'El email que ingresaste ya está en uso.' });
-        }
-        console.error(error);
-        return res.status(500).send({ status: 'error', message: 'Ocurrió un error inesperado al registrar.' });
-    }
-});
-
-
-// --- Ruta de Login ---
-// ( /api/sessions/login)
+// Ruta de Login
 router.post('/login', (req, res, next) => {
-
     passport.authenticate('local', { session: false }, (err, user, info) => {
-        if (err) {
-            return next(err);
+        try {
+            if (err) {
+                console.error('Error en autenticación:', err);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error interno del servidor' 
+                });
+            }
+            
+            if (!user) {
+                console.log('Credenciales inválidas:', info?.message);
+                return res.status(401).json({ 
+                    success: false, 
+                    message: info?.message || 'Credenciales inválidas' 
+                });
+            }   
+            console.log('Usuario autenticado:', user.email);    
+
+            // Generar token JWT
+            const token = jwt.sign(
+                { 
+                    id: user._id,
+                    email: user.email,
+                    role: user.role 
+                },
+                process.env.JWT_SECRET || 'secreto-gestor-horarios',
+                { expiresIn: '24h' }
+            );
+
+            // Configurar cookie
+            res.cookie('jwt', token, {
+                httpOnly: true,
+                maxAge: 24 * 60 * 60 * 1000, // 24 horas
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax'
+            });
+
+            // Respuesta JSON
+            res.json({
+                success: true,
+                message: 'Login exitoso',
+                user: {
+                    id: user._id,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    email: user.email,
+                    role: user.role
+                }
+            });
+
+        } catch (error) {
+            console.error('Error en proceso de login:', error);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Error interno del servidor' 
+            });
         }
-        if (!user) {
-            // Si el usuario no se encuentra o la contraseña es incorrecta
-            return res.status(401).send({ status: 'error', message: info.message || 'Credenciales inválidas.' });
-        }
-        // Si la autenticación es exitosa, generamos el token JWT
-        const payload = {
-            id: user._id,
-            email: user.email,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            age: user.age,
-            role: user.role
-        };
-
-        // Firmamos el token JWT
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }); // Expira en 1 hora
-
-        // Enviamos el token en una cookie
-        res.cookie('token', token, {
-            httpOnly: true, // El navegador no puede modificar la cookie
-            secure: false,  // Cambiar a 'true' en producción (con HTTPS)
-            maxAge: 3600000 // 1 hora
-        }).send({ status: 'success', message: 'Login exitoso' });
-
     })(req, res, next);
 });
 
+// Ruta de Registro
+router.post('/register', async (req, res) => {
+    try {
+        const { first_name, last_name, email, age, password } = req.body;
+    if (!first_name || !last_name || !email || !age || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Todos los campos son obligatorios'
+            });
+        }
+// Verificar si el usuario ya existe
+        const existingUser = await UserModel.findOne({ email });
+        if (existingUser) {
+            console.log('Intento de registro con email existente:', email);
+            return res.status(400).json({
+                success: false,
+                message: 'El email ya está registrado'
+            });
+        }
 
-// (Esta ruta estaría en GET /api/sessions/current)
-router.get('/current', passport.authenticate('jwt', { session: false }), (req, res) => {
+        // Crear nuevo usuario
+        const newUser = new UserModel({
+            first_name,
+            last_name,
+            email: email.toLowerCase(),
+            age,
+            password // Se encripta automáticamente por el pre-save hook
+        });
 
-    res.send({ status: 'success', payload: req.user });
+        await newUser.save();
+        console.log('Usuario registrado exitosamente:', email);
+    
+
+        // Auto-login después del registro
+        const token = jwt.sign(
+            { 
+                id: newUser._id,
+                email: newUser.email,
+                role: newUser.role 
+            },
+            process.env.JWT_SECRET || 'secreto-gestor-horarios',
+            { expiresIn: '24h' }
+        );
+
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Usuario registrado exitosamente',
+            user: {
+                id: newUser._id,
+                first_name: newUser.first_name,
+                last_name: newUser.last_name,
+                email: newUser.email,
+                role: newUser.role
+            }
+        });
+
+    } catch (error) {
+        console.error('Error en registro:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// Ruta Current
+router.get('/current', 
+    passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+        res.json({
+            success: true,
+            user: {
+                id: req.user._id,
+                first_name: req.user.first_name,
+                last_name: req.user.last_name,
+                email: req.user.email,
+                role: req.user.role
+            }
+        });
+    }
+);
+
+// Ruta Logout
+router.post('/logout', (req, res) => {
+    res.clearCookie('jwt');
+    res.json({ 
+        success: true, 
+        message: 'Sesión cerrada exitosamente' 
+    });
 });
 
 export default router;

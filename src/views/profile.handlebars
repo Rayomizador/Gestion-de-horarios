@@ -9,7 +9,8 @@
         <ul>
             {{#each user.dias_descanso}}
                 <li>{{this}}</li>
-            {{else}}
+         
+   {{else}}
                 <li>No tienes días de descanso fijos asignados.</li>
             {{/each}}
         </ul>
@@ -18,43 +19,58 @@
     <div class="col-md-6">
         <h4>Mi Horario Semanal</h4>
         <hr>
-        {{! Div para mensajes de éxito/error }}
+        {{!
+Div para mensajes de éxito/error }}
         <div id="formMessage" class="alert" style="display: none;"></div>
 
         <form id="horarioForm">
-            {{! Usamos 'horario.horas_lunes' porque 'user.horario' es el objeto poblado }}
+            {{!
+Usamos 'horario.horas_lunes' porque 'user.horario' es el objeto poblado }}
             <div class="mb-3">
                 <label class="form-label">Lunes (horas)</label>
-                <input type="number" class="form-control" name="horas_lunes" value="{{user.horario.horas_lunes}}">
+                {{! --- CORRECCIÓN --- }}
+                <input type="number" class="form-control" name="horas_lunes" value="{{#if user.horario}}{{user.horario.horas_lunes}}{{/if}}">
             </div>
             <div class="mb-3">
-                <label class="form-label">Martes (horas)</label>
-                <input type="number" class="form-control" name="horas_martes" value="{{user.horario.horas_martes}}">
+                
+<label class="form-label">Martes (horas)</label>
+                {{! --- CORRECCIÓN --- }}
+                <input type="number" class="form-control" name="horas_martes" value="{{#if user.horario}}{{user.horario.horas_martes}}{{/if}}">
             </div>
             <div class="mb-3">
                 <label class="form-label    ">Miércoles (horas)</label>
-                <input type="number" class="form-control" name="horas_miercoles" value="{{user.horario.horas_miercoles}}">
-            </div>
+                {{! --- CORRECCIÓN --- }}
+                <input type="number" class="form-control" name="horas_miercoles" value="{{#if user.horario}}{{user.horario.horas_miercoles}}{{/if}}">
+           
+ </div>
             <div class="mb-3">
                 <label class="form-label    ">Jueves (horas)</label>
-                <input type="number" class="form-control" name="horas_jueves" value="{{user.horario.horas_jueves}}">
+                {{! --- CORRECCIÓN --- }}
+                <input type="number" class="form-control" name="horas_jueves" value="{{#if user.horario}}{{user.horario.horas_jueves}}{{/if}}">
             </div> 
             <div class="mb-3">
-                <label class="form-label        ">Viernes (horas)</label>   
-                <input type="number" class="form-control" name="horas_viernes" value="{{user.horario.horas_viernes}}">
+                <label class="form-label 
+       ">Viernes (horas)</label>
+                {{! --- CORRECCIÓN --- }}
+                <input type="number" class="form-control" name="horas_viernes" value="{{#if user.horario}}{{user.horario.horas_viernes}}{{/if}}">
             </div>
             <div class="mb-3">
                 <label class="form-label        ">Sábado (horas)</label>
-                <input type="number" class="form-control" name="horas_sabado" value="{{user.horario.horas_sabado}}">
+                <input type="number" 
+class="form-control" name="horas_sabado" value="{{#if user.horario}}{{user.horario.horas_sabado}}{{/if}}">
             </div>
             <div class="mb-3">
                 <label class="form-label">Domingo (horas)</label>
-                <input type="number" class="form-control" name="horas_domingo" value="{{user.horario.horas_domingo}}">
+                {{! --- CORRECCIÓN --- }}
+                <input type="number" class="form-control" name="horas_domingo" value="{{#if user.horario}}{{user.horario.horas_domingo}}{{/if}}">
+            </div> {{! Tu código original tenía un </div> aquí, lo moví después del botón }}
 
             <button type="submit" class="btn btn-success">Guardar Horario</button>
         </form>
     </div>
 </div>
+
+
 
 <script>
     document.getElementById('horarioForm').addEventListener('submit', async (e) => {
