@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { HorarioModel } from '../models/horario.models.js';
+import { UserModel } from '../models/user.models.js';
 import { requireAuthView } from '../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -25,11 +26,29 @@ router.post('/', requireAuthView, async (req, res) => {
             });
         }
 
+        // Validar rangos
+        const semanaNum = parseInt(semana);
+        const añoNum = parseInt(año);
+
+        if (isNaN(semanaNum) || semanaNum < 1 || semanaNum > 53) {
+            return res.status(400).json({
+                success: false,
+                message: 'Semana debe estar entre 1 y 53'
+            });
+        }
+
+        if (isNaN(añoNum) || añoNum < 2020 || añoNum > 2100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Año inválido'
+            });
+        }
+
         // Verificar si ya existe un horario para esta semana y año
         const horarioExistente = await HorarioModel.findOne({
             usuario,
-            semana,
-            año
+            semana: semanaNum,
+            año: añoNum
         });
 
         if (horarioExistente) {
@@ -42,15 +61,14 @@ router.post('/', requireAuthView, async (req, res) => {
         // Crear nuevo horario
         const horario = new HorarioModel({
             usuario,
-            semana: parseInt(semana),
-            año: parseInt(año),
+            semana: semanaNum,
+            año: añoNum,
             dias: dias || []
         });
 
         await horario.save();
 
         // Actualizar referencia en el usuario
-        const UserModel = require('../models/user.models.js').UserModel;
         await UserModel.findByIdAndUpdate(usuario, {
             horario: horario._id
         });
@@ -174,7 +192,6 @@ router.delete('/:id', requireAuthView, async (req, res) => {
         }
 
         // Remover referencia del usuario
-        const UserModel = require('../models/user.models.js').UserModel;
         await UserModel.findByIdAndUpdate(req.user._id, {
             $unset: { horario: 1 }
         });

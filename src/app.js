@@ -30,7 +30,7 @@ const __dirname = path.dirname(__filename);
 console.log('Directorio de vistas:', path.join(__dirname, 'views'));
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || 3000, 10);
 const MONGO_URI = process.env.MONGO_URI;
 
 // Verificar variables de entorno críticas
@@ -122,16 +122,40 @@ mongoose.connect(MONGO_URI)
     .then(async () => {
         console.log(" Conectado a la base de datos MongoDB");
 
-        const httpServer = http.createServer(app);
-        const io = new Server(httpServer);
-        websocket(io);
-        app.set('socketio', io);
+        // Función recursiva para encontrar un puerto disponible
+        const startServerOnAvailablePort = (port, maxAttempts = 10, attempt = 1) => {
+            if (attempt > maxAttempts) {
+                console.error(`❌ No se encontró un puerto disponible después de ${maxAttempts} intentos`);
+                process.exit(1);
+            }
 
-        httpServer.listen(PORT, () => {
-            console.log(`Servidor escuchando en http://localhost:${PORT}`);
-            console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`Directorio de vistas: ${path.join(__dirname, 'views')}`);
-        });
+            const httpServer = http.createServer(app);
+            const io = new Server(httpServer);
+            websocket(io);
+            app.set('socketio', io);
+
+            httpServer.listen(port)
+                .on('listening', () => {
+                    console.log(`✅ Servidor escuchando en http://localhost:${port}`);
+                    if (attempt > 1) {
+                        console.log(`   (Puerto original ${PORT} estaba ocupado, se usó ${port})`);
+                    }
+                    console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
+                    console.log(`Directorio de vistas: ${path.join(__dirname, 'views')}`);
+                })
+                .on('error', (err) => {
+                    if (err.code === 'EADDRINUSE') {
+                        console.log(`⚠️  Puerto ${port} ocupado, intentando puerto ${port + 1}...`);
+                        httpServer.close();
+                        startServerOnAvailablePort(port + 1, maxAttempts, attempt + 1);
+                    } else {
+                        console.error('❌ Error al iniciar servidor:', err);
+                        process.exit(1);
+                    }
+                });
+        };
+
+        startServerOnAvailablePort(PORT);
     })
     .catch(error => {
         console.error(" Error al conectar a la base de datos:", error);

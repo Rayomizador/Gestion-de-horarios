@@ -1,110 +1,50 @@
 <div class="row">
-    <div class="col-md-6">
-        <h2>Perfil de {{user.first_name}} {{user.last_name}}</h2>
-        <hr>
-        <p><strong>Email:</strong> {{user.email}}</p>
-        <p><strong>Rol:</strong> {{user.role}}</p>
-
-        <h4>Días de Descanso Fijos:</h4>
-        <ul>
-            {{#each user.dias_descanso}}
-                <li>{{this}}</li>
-         
-   {{else}}
-                <li>No tienes días de descanso fijos asignados.</li>
-            {{/each}}
-        </ul>
-    </div>
-
-    <div class="col-md-6">
-        <h4>Mi Horario Semanal</h4>
-        <hr>
-        {{!
-Div para mensajes de éxito/error }}
-        <div id="formMessage" class="alert" style="display: none;"></div>
-
-        <form id="horarioForm">
-            {{!
-Usamos 'horario.horas_lunes' porque 'user.horario' es el objeto poblado }}
-            <div class="mb-3">
-                <label class="form-label">Lunes (horas)</label>
-                {{! --- CORRECCIÓN --- }}
-                <input type="number" class="form-control" name="horas_lunes" value="{{#if user.horario}}{{user.horario.horas_lunes}}{{/if}}">
+    <div class="col-md-8 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Perfil de {{user.first_name}} {{user.last_name}}</h4>
             </div>
-            <div class="mb-3">
-                
-<label class="form-label">Martes (horas)</label>
-                {{! --- CORRECCIÓN --- }}
-                <input type="number" class="form-control" name="horas_martes" value="{{#if user.horario}}{{user.horario.horas_martes}}{{/if}}">
-            </div>
-            <div class="mb-3">
-                <label class="form-label    ">Miércoles (horas)</label>
-                {{! --- CORRECCIÓN --- }}
-                <input type="number" class="form-control" name="horas_miercoles" value="{{#if user.horario}}{{user.horario.horas_miercoles}}{{/if}}">
-           
- </div>
-            <div class="mb-3">
-                <label class="form-label    ">Jueves (horas)</label>
-                {{! --- CORRECCIÓN --- }}
-                <input type="number" class="form-control" name="horas_jueves" value="{{#if user.horario}}{{user.horario.horas_jueves}}{{/if}}">
-            </div> 
-            <div class="mb-3">
-                <label class="form-label 
-       ">Viernes (horas)</label>
-                {{! --- CORRECCIÓN --- }}
-                <input type="number" class="form-control" name="horas_viernes" value="{{#if user.horario}}{{user.horario.horas_viernes}}{{/if}}">
-            </div>
-            <div class="mb-3">
-                <label class="form-label        ">Sábado (horas)</label>
-                <input type="number" 
-class="form-control" name="horas_sabado" value="{{#if user.horario}}{{user.horario.horas_sabado}}{{/if}}">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Domingo (horas)</label>
-                {{! --- CORRECCIÓN --- }}
-                <input type="number" class="form-control" name="horas_domingo" value="{{#if user.horario}}{{user.horario.horas_domingo}}{{/if}}">
-            </div> {{! Tu código original tenía un </div> aquí, lo moví después del botón }}
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Email:</strong> {{user.email}}</p>
+                        <p><strong>Edad:</strong> {{user.age}} años</p>
+                        <p><strong>Rol:</strong> {{user.role}}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Configuración Horaria</h5>
+                        {{#if user.configuracion_horaria}}
+                            <p><strong>Horas semanales:</strong> {{user.configuracion_horaria.horas_semanales}}h</p>
+                            <p><strong>Turno:</strong> {{user.configuracion_horaria.turno}}</p>
+                            <p><strong>Fecha contratación:</strong> {{user.configuracion_horaria.fecha_contratacion}}</p>
+                        {{else}}
+                            <p class="text-muted">Sin configuración horaria</p>
+                        {{/if}}
+                    </div>
+                </div>
 
-            <button type="submit" class="btn btn-success">Guardar Horario</button>
-        </form>
+                <hr>
+
+                <h5>Días de Descanso Fijos</h5>
+                {{#if user.dias_descanso}}
+                    {{#if user.dias_descanso.length}}
+                        <ul class="list-group list-group-flush">
+                            {{#each user.dias_descanso}}
+                                <li class="list-group-item">{{this}}</li>
+                            {{/each}}
+                        </ul>
+                    {{else}}
+                        <p class="text-muted">No tienes días de descanso fijos asignados.</p>
+                    {{/if}}
+                {{else}}
+                    <p class="text-muted">No tienes días de descanso fijos asignados.</p>
+                {{/if}}
+
+                <div class="mt-4">
+                    <a href="/horarios" class="btn btn-primary">Ver Mis Horarios</a>
+                    <a href="/horarios/nuevo" class="btn btn-success">Crear Nuevo Horario</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-
-
-<script>
-    document.getElementById('horarioForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        const msgDiv = document.getElementById('formMessage');
-
-        try {
-            const response = await fetch('/api/horarios', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                    // La cookie JWT se envía automáticamente
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                msgDiv.textContent = '¡Horario guardado!';
-                msgDiv.className = 'alert alert-success';
-            } else {
-                msgDiv.textContent = result.message || 'Error al guardar.';
-                msgDiv.className = 'alert alert-danger';
-            }
-            msgDiv.style.display = 'block';
-
-        } catch (err) {
-            msgDiv.textContent = 'Error de conexión.';
-            msgDiv.className = 'alert alert-danger';
-            msgDiv.style.display = 'block';
-        }
-    });
-</script>

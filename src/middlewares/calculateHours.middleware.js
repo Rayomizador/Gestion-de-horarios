@@ -1,12 +1,21 @@
 /**
  * Middleware para calcular horas trabajadas de un horario
  * @param {Object} horario - Objeto de horario con array de días
- * @returns {Object} - Objeto con horasTotales y horasExtrasTotales
+ * @returns {Object} - Objeto con horasTotales, horasExtrasTotales y errores
  */
 export const calculateHours = (horario) => {
     let horasTotales = 0;
     let horasExtrasTotales = 0;
     const errores = [];
+
+    // Validar que horario tenga días
+    if (!horario || !horario.dias || !Array.isArray(horario.dias)) {
+        return {
+            horasTotales: 0,
+            horasExtrasTotales: 0,
+            errores: ['No se proporcionaron días válidos']
+        };
+    }
 
     horario.dias.forEach((dia, index) => {
         try {

@@ -73,6 +73,9 @@ const horarioSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Índice compuesto para búsquedas eficientes y prevenir duplicados
+horarioSchema.index({ usuario: 1, año: 1, semana: 1 }, { unique: true });
+
 // Middleware pre-save usando el middleware externo
 horarioSchema.pre('save', function(next) {
     const calculo = calculateHours(this);

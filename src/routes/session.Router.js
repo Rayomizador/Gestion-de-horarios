@@ -72,14 +72,34 @@ router.post('/login', (req, res, next) => {
 router.post('/register', async (req, res) => {
     try {
         const { first_name, last_name, email, age, password } = req.body;
-    if (!first_name || !last_name || !email || !age || !password) {
+        
+        // Validar campos obligatorios
+        if (!first_name || !last_name || !email || !age || !password) {
             return res.status(400).json({
                 success: false,
                 message: 'Todos los campos son obligatorios'
             });
         }
-// Verificar si el usuario ya existe
-        const existingUser = await UserModel.findOne({ email });
+
+        // Validar longitud de contraseña
+        if (password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña debe tener al menos 6 caracteres'
+            });
+        }
+
+        // Validar edad
+        const edadNum = parseInt(age);
+        if (isNaN(edadNum) || edadNum < 18 || edadNum > 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Edad inválida. Debes ser mayor de 18 años'
+            });
+        }
+
+        // Verificar si el usuario ya existe
+        const existingUser = await UserModel.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             console.log('Intento de registro con email existente:', email);
             return res.status(400).json({

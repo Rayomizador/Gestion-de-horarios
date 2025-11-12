@@ -17,16 +17,24 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
         lowercase: true,
-        trim: true
+        trim: true,
+        validate: {
+            validator: function(v) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            },
+            message: 'Email inválido'
+        }
     },
     age: {
         type: Number,
         required: true,
-        min: 0
+        min: [18, 'Debes ser mayor de 18 años'],
+        max: [100, 'Edad inválida']
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        minlength: [6, 'La contraseña debe tener al menos 6 caracteres']
     },
     // Reemplazamos 'cart' por 'horario' y 'dias_descanso'
     horario: {
@@ -62,16 +70,24 @@ const userSchema = new mongoose.Schema({
 });
 
 // Encriptación de contraseña
-userSchema.pre('save', function(next) {
+userSchema.pre('save', async function(next) {
+    // Solo hashear si la contraseña fue modificada O si es un documento nuevo
     if (!this.isModified('password')) return next();
-    this.password = bcrypt.hashSync(this.password, 10);
-    next();
+    
+    try {
+        // Usar método asíncrono para mejor performance
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
 });
 
 // Método para comparar contraseñas
-userSchema.methods.comparePassword = function(password) {
+userSchema.methods.comparePassword = async function(password) {
     try {
-        return bcrypt.compareSync(password, this.password);
+        return await bcrypt.compare(password, this.password);
     } catch (error) {
         console.error('Error comparando contraseñas:', error);
         return false;

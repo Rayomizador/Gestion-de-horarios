@@ -21,7 +21,7 @@ export const initializePassport = () => {
             }
             
             // Verificar contraseña
-            const isPasswordValid = user.comparePassword(password);
+            const isPasswordValid = await user.comparePassword(password);
             if (!isPasswordValid) {
                 console.log(' Contraseña incorrecta para:', email);
                 return done(null, false, { message: 'Contraseña incorrecta' });
@@ -84,7 +84,8 @@ export const initializePassport = () => {
             }
         ]),
         secretOrKey: process.env.JWT_SECRET || 'secreto-gestor-horarios',
-        ignoreExpiration: true //desarrollo
+        // CORREGIDO: solo ignorar expiración en desarrollo
+        ignoreExpiration: process.env.NODE_ENV === 'development'
     }, async (payload, done) => {
         try {
             const user = await UserModel.findById(payload.id);
